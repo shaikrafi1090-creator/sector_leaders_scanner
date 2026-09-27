@@ -30,7 +30,7 @@ def fetch_and_calculate_scores(df_input):
         
     tickers = [f"{ticker}.NS" for ticker in stock_map.keys()]
     
-    # Batch download (Removed 'show_errors=False' to fix the error)
+    # Batch download
     data = yf.download(tickers, period="1y", group_by='ticker', threads=True)
     
     results = []
@@ -133,6 +133,10 @@ if os.path.exists(file_name):
                     final_df = final_df.sort_values(by=['Score'], ascending=False).drop(columns=['Percentile'])
                     final_df.reset_index(drop=True, inplace=True)
                     
+                    # 🟢 NAYA ADD KIYA GAYA HISA: TradingView Link Column
+                    # Stock column ke just baad (Index 1) TradingView link insert karna
+                    final_df.insert(1, 'TradingView', "https://in.tradingview.com/chart/?symbol=NSE:" + final_df['Stock'])
+                    
                     st.success(f"✅ Scanning Complete! Found {len(final_df)} Top 10% sector leaders.")
                     st.subheader("🏆 Classified Stock Leaders")
                     
@@ -140,9 +144,24 @@ if os.path.exists(file_name):
                         "Score": "{:.2f}", "Last_20D": "{:.2f}", "Days_21_80": "{:.2f}", 
                         "Days_81_160": "{:.2f}", "Days_161_250": "{:.2f}"
                     })
-                    st.dataframe(styled_df, height=600, use_container_width=True)
                     
-                    csv_export = final_df.to_csv(index=False).encode('utf-8')
+                    # 🟢 st.dataframe mein column_config use karke text ko clickable link banana
+                    st.dataframe(
+                        styled_df, 
+                        height=600, 
+                        use_container_width=True,
+                        column_config={
+                            "TradingView": st.column_config.LinkColumn(
+                                "TradingView",
+                                help="Click to open chart on TradingView",
+                                display_text="📊 View Chart"
+                            )
+                        }
+                    )
+                    
+                    # CSV Download karne se pehle TradingView column ko hata dena taaki CSV clean rahe
+                    download_df = final_df.drop(columns=['TradingView'])
+                    csv_export = download_df.to_csv(index=False).encode('utf-8')
                     st.download_button(
                         label="⬇️ Download Final Results CSV",
                         data=csv_export,
