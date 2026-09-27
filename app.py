@@ -30,8 +30,8 @@ def fetch_and_calculate_scores(df_input):
         
     tickers = [f"{ticker}.NS" for ticker in stock_map.keys()]
     
-    # Batch download
-    data = yf.download(tickers, period="1y", group_by='ticker', threads=True, show_errors=False)
+    # Batch download (Removed 'show_errors=False' to fix the error)
+    data = yf.download(tickers, period="1y", group_by='ticker', threads=True)
     
     results = []
     progress_bar = st.progress(0)
